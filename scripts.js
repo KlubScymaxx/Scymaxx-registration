@@ -1,5 +1,9 @@
-document.getElementById('registrationForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    alert('Form submitted successfully!');
-    this.submit();
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registrationForm');
+    
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        alert('Form submitted successfully!');
+        form.submit();
+    });
 });
