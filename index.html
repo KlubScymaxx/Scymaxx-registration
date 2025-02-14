@@ -1,43 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>High School Club Registration</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>University Club Registration</title>
+  <!-- Animate.css for smooth animations -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <!-- Optional: Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <style>
+    /* Basic Reset */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #74ABE2, #5563DE);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 400px;
+    }
+    h2 { text-align: center; margin-bottom: 1rem; }
+    form { display: flex; flex-direction: column; }
+    label { margin-top: 0.5rem; }
+    input, button {
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+    input:focus { border-color: #5563DE; outline: none; }
+    button {
+      background: #5563DE;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    button:hover { background: #4452b2; }
+    .message { margin-top: 1rem; text-align: center; }
+    /* Optional: Style for the AI Chatbot container */
+    #botui-app {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 300px;
+      z-index: 1000;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>High School Club Registration</h1>
-        <form id="registrationForm" action="https://formspree.io/f/mbjnvzkw" method="POST" enctype="multipart/form-data">
-            <div class="form-group">
-                <label for="name">Name</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-            <div class="form-group">
-                <label for="age">Age</label>
-                <input type="number" id="age" name="age" required>
-            </div>
-            <div class="form-group">
-                <label for="dob">Date of Birth</label>
-                <input type="date" id="dob" name="dob" required>
-            </div>
-            <div class="form-group">
-                <label for="school">School Attended</label>
-                <input type="text" id="school" name="school" required>
-            </div>
-            <div class="form-group">
-                <label for="education">Level of Education</label>
-                <input type="text" id="education" name="education" required>
-            </div>
-            <div class="form-group">
-                <label for="photo">Upload Photo</label>
-                <input type="file" id="photo" name="photo" accept="image/*">
-            </div>
-            <button type="submit">Register</button>
-        </form>
-    </div>
-    <script src="js/scripts.js"></script>
+  <!-- Main Registration Form Container -->
+  <div class="container animate__animated animate__fadeInUp">
+    <h2>Club Registration</h2>
+    <form id="registrationForm">
+      <label for="fullName">Full Name:</label>
+      <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" required>
+      
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" placeholder="Enter your email" required>
+      
+      <label for="major">Major/Department:</label>
+      <input type="text" id="major" name="major" placeholder="Your major or department" required>
+      
+      <!-- Add additional fields as needed -->
+      
+      <button type="submit">Register</button>
+    </form>
+    <div class="message" id="formMessage"></div>
+  </div>
+
+  <!-- Firebase SDKs (v9 compat) loaded via CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script>
+    // Replace the placeholder values below with your Firebase project configuration
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      // ...other configuration values provided by Firebase
+    };
+
+    // Initialize Firebase and Firestore
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Get references to the form and message elements
+    const form = document.getElementById('registrationForm');
+    const formMessage = document.getElementById('formMessage');
+
+    // Listen for form submission
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); // Prevent the default form submission
+
+      // Retrieve form input values
+      const fullName = document.getElementById('fullName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const major = document.getElementById('major').value.trim();
+
+      // Basic client-side validation
+      if (!fullName || !email || !major) {
+        formMessage.textContent = "Please fill in all required fields.";
+        formMessage.style.color = "red";
+        return;
+      }
+
+      // Indicate that the form is being submitted
+      formMessage.textContent = "Submitting...";
+      formMessage.style.color = "#333";
+
+      try {
+        // Add the registration data as a new document in the 'registrations' collection
+        await db.collection('registrations').add({
+          fullName: fullName,
+          email: email,
+          major: major,
+          timestamp: new Date()
+        });
+
+        // Clear the form and show a success message
+        form.reset();
+        formMessage.textContent = "Registration successful!";
+        formMessage.style.color = "green";
+      } catch (error) {
+        console.error("Error adding document: ", error);
+        formMessage.textContent = "Error during registration. Please try again.";
+        formMessage.style.color = "red";
+      }
+    });
+  </script>
+
+  <!-- Optional: AI Chatbot Integration using BotUI -->
+  <!-- This lightweight chatbot offers tips on how to fill out the form -->
+  <div id="botui-app"></div>
+  <!-- BotUI CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/botui/build/botui.min.css">
+  <!-- Vue.js (dependency for BotUI) -->
+  <script src="https://unpkg.com/vue"></script>
+  <!-- BotUI JavaScript -->
+  <script src="https://unpkg.com/botui/build/botui.min.js"></script>
+  <script>
+    // Initialize BotUI
+    var botui = new BotUI('botui-app');
+
+    // Start a simple conversation after a short delay
+    setTimeout(() => {
+      botui.message.add({
+        content: 'Hi there! Need help with filling out the form?'
+      }).then(() => {
+        return botui.action.button({
+          delay: 1000,
+          action: [
+            { text: 'Yes, please!', value: 'yes' },
+            { text: 'No, thanks', value: 'no' }
+          ]
+        });
+      }).then((res) => {
+        if (res.value === 'yes') {
+          botui.message.add({
+            delay: 500,
+            content: 'Make sure to enter your full legal name, a valid email, and your department/major.'
+          });
+        } else {
+          botui.message.add({
+            delay: 500,
+            content: 'Alright! Feel free to ask if you need any help.'
+          });
+        }
+      });
+    }, 2000);
+  </script>
 </body>
 </html>
